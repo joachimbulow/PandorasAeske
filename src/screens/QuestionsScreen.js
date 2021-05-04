@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,16 +6,106 @@ import {
   SafeAreaView,
   TextInput,
   KeyboardAvoidingView,
+  Button,
+  Alert,
+  Platform
 } from "react-native";
 import { SvgXml } from "react-native-svg";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { BOX_SVG } from "../assets/svgs/Svgs.js";
 import PinkButton from "../components/PinkButton.js";
 
+import FirebaseService from "../services/FirebaseService.js";
+
 export default function QuestionsScreen(props) {
   const [question, setQuestion] = useState("");
 
+  const [allQuestions, setAllQuestions] = useState([])
+
+  const codeRef = useRef(props.route.params.code);
+  //If no code then host
+  const hostRef = useRef(props.route.params.host);
+
+
   const boxSvgMarkup = BOX_SVG;
+
+  useEffect(() => {
+    props.navigation.setOptions({
+      headerLeft: () => (
+        <Button
+          onPress={() => {
+            Alert.alert(
+              "Afslut spil",
+              "Er du sikker på at du vil afslutte spillet?",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Quit", onPress: () => quitGame() },
+              ],
+              { cancelable: false }
+            );
+          }}
+          title="Quit"
+          color="black"
+        ></Button>
+      ),
+    });
+
+    setupQuestionsUpdatedListener();
+
+    if (!hostRef.current) {
+      setupHostQuittingGameListener();
+    }
+
+    return function cleanUp() {
+      removeHostQuittingGameListener();
+      removeQuestionsUpdatedListener();
+    }
+  }, [])
+
+
+  function quitGame() {
+    if (hostRef.current) {
+      FirebaseService.quitAndDeleteGame(codeRef.current);
+    } else {
+      FirebaseService.leaveGame(codeRef.current, props.route.params.name);
+    }
+    props.navigation.navigate("Home");
+  }
+
+  function addQuestion() {
+    FirebaseService.addQuestion(question, codeRef.current);
+    setQuestion("")
+    Alert.alert("Spørgsmål indsendt", "Dit spørgsmål blev indsendt med success.")
+  }
+
+
+  /// Listeners
+  function setupHostQuittingGameListener() {
+    FirebaseService.getDatabaseReference("/" + codeRef.current).on("value", (snapshot) => {
+      if (!snapshot.val()) {
+        props.navigation.navigate("Home");
+        Alert.alert("Spillet er slut", "Spillet blev afsluttet af værten.");
+      }
+    });
+  }
+
+  function removeHostQuittingGameListener() {
+    FirebaseService.getDatabaseReference("/").off();
+  }
+
+  function setupQuestionsUpdatedListener() {
+    FirebaseService.getDatabaseReference("/" + codeRef.current + "/questions").on("value", (snapshot) => {
+      if (snapshot.val()) {
+        setAllQuestions(snapshot.val())
+      }
+    })
+  }
+
+  function removeQuestionsUpdatedListener() {
+    FirebaseService.getDatabaseReference("/" + codeRef.current + "/questions").off()
+  }
+
+  /// ! Listeners
 
   return (
     <>
@@ -35,6 +125,7 @@ export default function QuestionsScreen(props) {
             </View>
           </View>
           <View style={styles.textInputView}>
+            <Text style={styles.codeText}>Antal spørgsmål: {allQuestions.length}</Text>
             <Text style={styles.codeText}>Dit spørgsmål:</Text>
             <TextInput
               blurOnSubmit={true}
@@ -42,13 +133,14 @@ export default function QuestionsScreen(props) {
               numberOfLines={4}
               maxLength={145}
               value={question}
-              onChangeText={(text) => setQuestion(text)}
+              onChangeText={(text) => question.length < 95 ? setQuestion(text) : undefined}
               style={styles.textInput}
             ></TextInput>
           </View>
 
           <View style={styles.buttonsView}>
-            <PinkButton text="INDSEND SPØRGSMÅL" />
+            <PinkButton text="INDSEND SPØRGSMÅL" onPress={(() => { addQuestion() })} disabled={question == ""} />
+            {hostRef.current && <PinkButton text="START SPILLET" />}
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>

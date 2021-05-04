@@ -16,8 +16,9 @@ export default function LobbyScreen(props) {
   const [code, setCode] = useState("");
   const [users, setUsers] = useState([]);
 
-  const codeRef = useRef("");
-  const hostRef = useRef(false);
+  const codeRef = useRef(props.route.params.code);
+  //If no code then host
+  const hostRef = useRef(!props.route.params.code);
 
   useEffect(() => {
     //Configurations
@@ -41,8 +42,20 @@ export default function LobbyScreen(props) {
       ),
     });
 
-    //Not host
-    if (props.route.params.code) {
+    //Host
+    if (hostRef.current) {
+      //Generate new game
+      let gameCode = (Math.random() + 1)
+        .toString(36)
+        .substring(2, 7)
+        .toUpperCase();
+      setCode(gameCode);
+      codeRef.current = gameCode;
+      FirebaseService.generateNewGame(gameCode, props.route.params.name, 0);
+    }
+
+    //Host
+    else {
       setCode(props.route.params.code);
       codeRef.current = props.route.params.code;
       FirebaseService.joinExistingGame(
@@ -53,39 +66,17 @@ export default function LobbyScreen(props) {
       setupHostQuittingGameListener();
     }
 
-    //Host
-    else {
-      //Generate new game
-      let gameCode = (Math.random() + 1)
-        .toString(36)
-        .substring(2, 7)
-        .toUpperCase();
-      setCode(gameCode);
-      codeRef.current = gameCode;
-      hostRef.current = true;
-      FirebaseService.generateNewGame(gameCode, props.route.params.name, 0);
-    }
-
-    //TODO: Unsubscribe
     setupRegisteredUsersListener();
 
     return function cleanUp() {
       removeRegisteredUsersListener();
-
-      if (!hostRef.current) {
-        removeGameStateListener();
-        removeHostQuittingGameListener();
-      }
+      removeGameStateListener();
+      removeHostQuittingGameListener();
     };
   }, []);
 
-  //Sync code with ref to access in cleanup
-  useEffect(() => {
-    codeRef.current = code;
-  }, [code]);
-
   function quitGame() {
-    if (hostRef) {
+    if (hostRef.current) {
       FirebaseService.quitAndDeleteGame(codeRef.current);
     } else {
       FirebaseService.leaveGame(codeRef.current, props.route.params.name);
@@ -93,24 +84,34 @@ export default function LobbyScreen(props) {
     props.navigation.navigate("Home");
   }
 
-  ////////////////// Listeners
-
-  function setupHostQuittingGameListener() {
-    FirebaseService.getDatabaseReference("/").on("value", (snapshot) => {
-      if (!snapshot.val()) {
-        props.navigation.navigate("Home");
-        alert("Game was ended by the host.");
-      }
+  function navigateToQuestions() {
+    if (hostRef.current) {
+      FirebaseService.setGameState(codeRef.current, 1);
+    }
+    props.navigation.navigate("Questions", {
+      ...(props.route.params && {
+        code: codeRef.current,
+        host: hostRef.current,
+      }),
     });
   }
 
-  function removeHostQuittingGameListener() {
-    FirebaseService.getDatabaseReference("/").off("value", (snapshot) => {
-      if (!snapshot.val()) {
-        props.navigation.navigate("Home");
-        alert("Game was ended by the host.");
+  ////////////////// Listeners
+
+  function setupHostQuittingGameListener() {
+    FirebaseService.getDatabaseReference("/" + codeRef.current).on(
+      "value",
+      (snapshot) => {
+        if (!snapshot.val()) {
+          props.navigation.navigate("Home");
+          Alert.alert("Spillet er slut", "Spillet blev afsluttet af værten.");
+        }
       }
-    });
+    );
+  }
+
+  function removeHostQuittingGameListener() {
+    FirebaseService.getDatabaseReference("/").off();
   }
 
   function setupRegisteredUsersListener() {
@@ -126,11 +127,7 @@ export default function LobbyScreen(props) {
   function removeRegisteredUsersListener() {
     FirebaseService.getDatabaseReference(
       "/" + codeRef.current + "/participants"
-    ).off("value", (snapshot) => {
-      if (snapshot.val()) {
-        setUsers(Object.values(snapshot.val()));
-      }
-    });
+    ).off();
   }
 
   function setupGameStateListener() {
@@ -138,7 +135,7 @@ export default function LobbyScreen(props) {
       "/" + codeRef.current + "/gameState"
     ).on("value", (snapshot) => {
       if (snapshot.val()) {
-        props.navigation.navigate("Questions");
+        navigateToQuestions();
       }
     });
   }
@@ -146,11 +143,7 @@ export default function LobbyScreen(props) {
   function removeGameStateListener() {
     FirebaseService.getDatabaseReference(
       "/" + codeRef.current + "/gameState"
-    ).off("value", (snapshot) => {
-      if (snapshot.val()) {
-        props.navigation.navigate("Questions");
-      }
-    });
+    ).off();
   }
 
   ///////////// <! -- Listeners -- >
@@ -176,7 +169,11 @@ export default function LobbyScreen(props) {
         </View>
         {hostRef.current && (
           <View style={styles.startGameButtonView}>
-            <PinkButton onPress={() => alert(users)} text="START SPIL" />
+            <PinkButton
+              onPress={() => alert(users)}
+              text="START SPIL"
+              onPress={() => navigateToQuestions()}
+            />
           </View>
         )}
       </SafeAreaView>

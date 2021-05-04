@@ -36,7 +36,6 @@ class FirebaseService {
       .once("value")
       .then((snapshot) => {
         if (snapshot.val()) {
-          console.log(Object.values(snapshot.val().participants));
           return !Object.values(snapshot.val().participants).includes(name);
         } else {
           return false;
@@ -47,7 +46,7 @@ class FirebaseService {
   generateNewGame(code, name) {
     //Game states: 0: lobby, 1: questions, 2: livegame
     this.database.ref().update({
-      [code]: { participants: [name], gameState: 0 },
+      [code]: { participants: [name], gameState: 0, questions: false, currentQuestion: "This is just a test" },
     });
   }
 
@@ -74,6 +73,26 @@ class FirebaseService {
         let users = snapshot.val().participants;
         users.splice(users.indexOf(name), 1);
         this.database.ref("/" + code).update({ participants: users });
+      });
+  }
+
+  //Game states: 0: lobby, 1: questions, 2: livegame
+  setGameState(code, state) {
+    this.database.ref("/" + code).update({ gameState: state });
+  }
+
+  addQuestion(question, code) {
+    this.database
+      .ref("/" + code)
+      .once("value")
+      .then((snapshot) => {
+        if (snapshot.val().questions) {
+          let questions = snapshot.val().questions;
+          questions.push(question);
+          this.database.ref("/" + code).update({ questions: questions });
+        } else {
+          this.database.ref("/" + code).update({ questions: [question] });
+        }
       });
   }
 }

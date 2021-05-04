@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, SafeAreaView, TextInput } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  TextInput,
+  KeyboardAvoidingView,
+} from "react-native";
 import { SvgXml } from "react-native-svg";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { BOX_SVG } from "../assets/svgs/Svgs.js";
@@ -23,28 +30,33 @@ export default function JoinGameScreen(props) {
   return (
     <>
       <SafeAreaView style={styles.container}>
-        <View style={styles.titleView}>
-          <Text style={styles.title}>JOIN SPIL</Text>
-        </View>
-
-        <View style={styles.svgIconView}>
-          <View style={styles.svgContainer}>
-            <SvgXml xml={boxSvgMarkup} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS == "ios" ? "padding" : "height"}
+          style={styles.keyboardAvoidingView}
+        >
+          <View style={styles.titleView}>
+            <Text style={styles.title}>JOIN SPIL</Text>
           </View>
-        </View>
-        <View style={styles.textInputView}>
-          <Text style={styles.codeText}>Kode:</Text>
-          <TextInput
-            autoCapitalize="characters"
-            value={code}
-            onChangeText={(text) => setCode(text)}
-            style={styles.textInput}
-          ></TextInput>
-        </View>
 
-        <View style={styles.buttonsView}>
-          <PinkButton text="JOIN SPIL" onPress={() => tryJoinGame()} />
-        </View>
+          <View style={styles.svgIconView}>
+            <View style={styles.svgContainer}>
+              <SvgXml xml={boxSvgMarkup} />
+            </View>
+          </View>
+          <View style={styles.textInputView}>
+            <Text style={styles.codeText}>Kode:</Text>
+            <TextInput
+              autoCapitalize="characters"
+              value={code}
+              onChangeText={(text) => setCode(text)}
+              style={styles.textInput}
+            ></TextInput>
+          </View>
+
+          <View style={styles.buttonsView}>
+            <PinkButton text="JOIN SPIL" onPress={() => tryJoinGame()} disabled={code == ""}/>
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </>
   );
@@ -55,6 +67,10 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "column",
     backgroundColor: "#D56C7A",
+  },
+
+  keyboardAvoidingView: {
+    flex: 1,
   },
 
   titleView: {
