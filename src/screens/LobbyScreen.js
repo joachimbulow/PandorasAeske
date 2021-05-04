@@ -51,10 +51,10 @@ export default function LobbyScreen(props) {
         .toUpperCase();
       setCode(gameCode);
       codeRef.current = gameCode;
-      FirebaseService.generateNewGame(gameCode, props.route.params.name, 0);
+      FirebaseService.generateNewGame(gameCode, props.route.params.name);
     }
 
-    //Host
+    //Not host
     else {
       setCode(props.route.params.code);
       codeRef.current = props.route.params.code;
@@ -89,10 +89,7 @@ export default function LobbyScreen(props) {
       FirebaseService.setGameState(codeRef.current, 1);
     }
     props.navigation.navigate("Questions", {
-      ...(props.route.params && {
-        code: codeRef.current,
-        host: hostRef.current,
-      }),
+      ...props.route.params, ...{ code: codeRef.current, host: hostRef.current }
     });
   }
 
@@ -134,7 +131,7 @@ export default function LobbyScreen(props) {
     FirebaseService.getDatabaseReference(
       "/" + codeRef.current + "/gameState"
     ).on("value", (snapshot) => {
-      if (snapshot.val()) {
+      if (snapshot.val() && snapshot.val().gameState == 1) {
         navigateToQuestions();
       }
     });

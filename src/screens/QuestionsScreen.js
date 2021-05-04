@@ -54,11 +54,13 @@ export default function QuestionsScreen(props) {
 
     if (!hostRef.current) {
       setupHostQuittingGameListener();
+      setupGameStateListener();
     }
 
     return function cleanUp() {
       removeHostQuittingGameListener();
       removeQuestionsUpdatedListener();
+      removeGameStateListener();
     }
   }, [])
 
@@ -78,6 +80,14 @@ export default function QuestionsScreen(props) {
     Alert.alert("Spørgsmål indsendt", "Dit spørgsmål blev indsendt med success.")
   }
 
+  function navigateToGame() {
+    if (hostRef.current) {
+      FirebaseService.setGameState(codeRef.current, 2);
+    }
+    props.navigation.navigate("Game", {
+      ...props.route.params, ...{ questions: allQuestions }
+    });
+  }
 
   /// Listeners
   function setupHostQuittingGameListener() {
@@ -103,6 +113,22 @@ export default function QuestionsScreen(props) {
 
   function removeQuestionsUpdatedListener() {
     FirebaseService.getDatabaseReference("/" + codeRef.current + "/questions").off()
+  }
+
+  function setupGameStateListener() {
+    FirebaseService.getDatabaseReference(
+      "/" + codeRef.current + "/gameState"
+    ).on("value", (snapshot) => {
+      if (snapshot.val() && snapshot.val().gameState == 2) {
+        navigateToGame();
+      }
+    });
+  }
+
+  function removeGameStateListener() {
+    FirebaseService.getDatabaseReference(
+      "/" + codeRef.current + "/gameState"
+    ).off();
   }
 
   /// ! Listeners
@@ -140,7 +166,7 @@ export default function QuestionsScreen(props) {
 
           <View style={styles.buttonsView}>
             <PinkButton text="INDSEND SPØRGSMÅL" onPress={(() => { addQuestion() })} disabled={question == ""} />
-            {hostRef.current && <PinkButton text="START SPILLET" />}
+            {hostRef.current && <PinkButton onPress={() => navigateToGame()} text="START SPILLET" disabled={allQuestions.length == 0} />}
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>

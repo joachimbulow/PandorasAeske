@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, SafeAreaView, TextInput } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, Text, View, SafeAreaView, Button, Alert, } from "react-native";
 import { SvgXml } from "react-native-svg";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { BOX_SVG } from "../assets/svgs/Svgs.js";
@@ -7,13 +7,50 @@ import PinkButton from "../components/PinkButton.js";
 import * as firebase from "firebase";
 
 export default function QuestionsScreen(props) {
-  const [question, setQuestion] = useState("Jonas, hvorfor er du såå grim?");
-  const [myTurn, setMyTurn] = useState(false);
   const boxSvgMarkup = BOX_SVG;
 
+  const [question, setQuestion] = useState("Jonas, hvorfor er du såå grim?");
+  const [myTurn, setMyTurn] = useState(false);
+
+  console.log(props.route.params)
+  const codeRef = useRef(props.route.params.code);
+  const hostRef = useRef(props.route.params.host);
+
   useEffect(() => {
-    alert(firebase);
+    props.navigation.setOptions({
+      headerLeft: () => (
+        <Button
+          onPress={() => {
+            Alert.alert(
+              "Afslut spil",
+              "Er du sikker på at du vil afslutte spillet?",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Quit", onPress: () => quitGame() },
+              ],
+              { cancelable: false }
+            );
+          }}
+          title="Quit"
+          color="black"
+        ></Button>
+      ),
+    });
   }, []);
+
+  function quitGame() {
+    if (hostRef.current) {
+      FirebaseService.quitAndDeleteGame(codeRef.current);
+    } else {
+      FirebaseService.leaveGame(codeRef.current, props.route.params.name);
+    }
+    props.navigation.navigate("Home");
+  }
+
+  ////// Listeners
+
+
+  ////// ! Listeners
 
   return (
     <>

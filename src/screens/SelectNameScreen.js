@@ -26,11 +26,8 @@ export default function SelectNameScreen(props) {
 
   function navigateNext() {
     props.navigation.navigate("Lobby", {
-      name: name,
-      ...(props.route.params && {
-        code: props.route.params.code,
-      }),
-    });
+      ...props.route.params, ...{ name: name }
+    })
   }
 
   return (
