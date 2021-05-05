@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, Text, View, SafeAreaView, Button, Alert, } from "react-native";
 import { SvgXml } from "react-native-svg";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import { BOX_SVG } from "../assets/svgs/Svgs.js";
 import PinkButton from "../components/PinkButton.js";
-import * as firebase from "firebase";
+import FirebaseService from "../services/FirebaseService.js";
 
 export default function QuestionsScreen(props) {
   const boxSvgMarkup = BOX_SVG;
 
-  const [question, setQuestion] = useState("Jonas, hvorfor er du såå grim?");
+  const [question, setQuestion] = useState("");
   const [myTurn, setMyTurn] = useState(false);
 
-  console.log(props.route.params)
+  const participantsRef = useRef([]);
+  const questionsRef = useRef(props.route.params.questions.sort(() => Math.random() - 0.5))
   const codeRef = useRef(props.route.params.code);
   const hostRef = useRef(props.route.params.host);
 
@@ -36,6 +36,23 @@ export default function QuestionsScreen(props) {
         ></Button>
       ),
     });
+
+    if (hostRef.current) {
+      setupRegisteredUsersListener();
+    }
+    if (!hostRef.current) {
+      setupHostQuittingGameListener();
+    }
+
+    setupCurrentTurnListener();
+    setupCurrentQuestionListener();
+
+    return function cleanUp() {
+      removeHostQuittingGameListener();
+      removeRegisteredUsersListener();
+      removeCurrentTurnListener();
+      removeCurrentQuestionListener();
+    }
   }, []);
 
   function quitGame() {
@@ -47,8 +64,73 @@ export default function QuestionsScreen(props) {
     props.navigation.navigate("Home");
   }
 
-  ////// Listeners
+  function proceedToNextQuestion() {
+    if (questionsRef.current.length < 1) {
+      quitGame();
+      Alert.alert("Spillet er slut", "I er færdige med spillet. Tak for denne gang.");
+    }
+    else {
+      FirebaseService.setCurrentQuestion(codeRef.current, questionsRef.current.pop())
+      //Select a random participant
+      FirebaseService.setCurrentTurn(codeRef.current, participantsRef.current[Math.floor(Math.random() * participantsRef.current.length)])
 
+    }
+  }
+
+  ////// Listeners
+  function setupHostQuittingGameListener() {
+    FirebaseService.getDatabaseReference("/" + codeRef.current).on("value", (snapshot) => {
+      if (!snapshot.val()) {
+        props.navigation.navigate("Home");
+        Alert.alert("Spillet er slut", "Spillet blev afsluttet af værten.");
+      }
+    });
+  }
+
+  function removeHostQuittingGameListener() {
+    FirebaseService.getDatabaseReference("/").off();
+  }
+
+  function setupRegisteredUsersListener() {
+    FirebaseService.getDatabaseReference(
+      "/" + codeRef.current + "/participants"
+    ).on("value", (snapshot) => {
+      if (snapshot.val()) {
+        participantsRef.current = Object.values(snapshot.val());
+      }
+    });
+  }
+
+  function removeRegisteredUsersListener() {
+    FirebaseService.getDatabaseReference(
+      "/" + codeRef.current + "/participants"
+    ).off();
+  }
+
+  function setupCurrentTurnListener() {
+    FirebaseService.getDatabaseReference("/" + codeRef.current + "/" + "currentTurn").on("value", (snapshot) => {
+      if (snapshot.val() == props.route.params.name) {
+        setMyTurn(true);
+      }
+      else {
+        setMyTurn(false)
+      }
+    })
+  }
+
+  function removeCurrentTurnListener() {
+    FirebaseService.getDatabaseReference("/" + codeRef.current + "/" + "currentTurn").off()
+  }
+
+  function setupCurrentQuestionListener() {
+    FirebaseService.getDatabaseReference("/" + codeRef.current + "/" + "currentQuestion").on("value", (snapshot) => {
+      setQuestion(snapshot.val());
+    })
+  }
+
+  function removeCurrentQuestionListener() {
+    FirebaseService.getDatabaseReference("/" + codeRef.current + "/" + "currentQuestion").off()
+  }
 
   ////// ! Listeners
 
@@ -87,7 +169,7 @@ export default function QuestionsScreen(props) {
         </View>
 
         <View style={styles.buttonsView}>
-          {myTurn && <PinkButton text="NÆSTE SPØRGSMÅL" />}
+          {hostRef.current && <PinkButton onPress={() => proceedToNextQuestion()} text={questionsRef.current.length < 1 ? "AFSLUT SPIL" : "NÆSTE SPØRGSMÅL"} />}
         </View>
       </SafeAreaView>
     </>
@@ -128,6 +210,7 @@ const styles = StyleSheet.create({
   },
   questionTextView: {
     height: "80%",
+    minWidth: "60%",
     borderWidth: 1,
     backgroundColor: "#FFF",
     borderRadius: 15,

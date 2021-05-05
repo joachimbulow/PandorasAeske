@@ -131,7 +131,7 @@ export default function LobbyScreen(props) {
     FirebaseService.getDatabaseReference(
       "/" + codeRef.current + "/gameState"
     ).on("value", (snapshot) => {
-      if (snapshot.val() && snapshot.val().gameState == 1) {
+      if (snapshot.val() == 1) {
         navigateToQuestions();
       }
     });

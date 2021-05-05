@@ -119,7 +119,7 @@ export default function QuestionsScreen(props) {
     FirebaseService.getDatabaseReference(
       "/" + codeRef.current + "/gameState"
     ).on("value", (snapshot) => {
-      if (snapshot.val() && snapshot.val().gameState == 2) {
+      if (snapshot.val() == 2) {
         navigateToGame();
       }
     });

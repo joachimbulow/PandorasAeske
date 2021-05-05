@@ -46,7 +46,7 @@ class FirebaseService {
   generateNewGame(code, name) {
     //Game states: 0: lobby, 1: questions, 2: livegame
     this.database.ref().update({
-      [code]: { participants: [name], gameState: 0, questions: false, currentQuestion: "This is just a test" },
+      [code]: { participants: [name], gameState: 0, questions: false, currentQuestion: "Default question.", currentTurn: "Default." },
     });
   }
 
@@ -95,6 +95,23 @@ class FirebaseService {
         }
       });
   }
+
+  getAllParticipants(code) {
+    this.database.ref("/" + code + "/" + participants).once("value").then((snapshot) => {
+      if (snapshot.val()) return snapshot.val()
+      else return []
+    })
+  }
+
+  setCurrentTurn(code, name) {
+    this.database.ref("/" + code).update({ currentTurn: name })
+  }
+
+  setCurrentQuestion(code, question) {
+    this.database.ref("/" + code).update({ currentQuestion: question })
+  }
 }
+
+
 
 export default new FirebaseService();

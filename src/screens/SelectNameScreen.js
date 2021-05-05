@@ -34,7 +34,7 @@ export default function SelectNameScreen(props) {
     <>
       <SafeAreaView style={styles.container}>
             <KeyboardAvoidingView
-          behavior={Platform.OS == "ios" ? "padding" : "height"}
+
           style={styles.keyboardAvoidingView}
         >
               <View style={styles.titleView}>
