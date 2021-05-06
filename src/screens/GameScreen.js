@@ -82,9 +82,19 @@ export default function QuestionsScreen(props) {
     else {
       FirebaseService.setCurrentQuestion(codeRef.current, questionsRef.current.pop())
       //Select a random participant
-      FirebaseService.setCurrentTurn(codeRef.current, participantsRef.current[Math.floor(Math.random() * participantsRef.current.length)])
+      if (participantsRef.current.length > 1) {
+        FirebaseService.setCurrentTurn(codeRef.current, getNextReader())
+      }
 
     }
+  }
+
+  function getNextReader() {
+    let nextReader = currentReader
+    while (nextReader == currentReader) {
+      nextReader = participantsRef.current[Math.floor(Math.random() * participantsRef.current.length)]
+    }
+    return nextReader
   }
 
   function enableBoxAnimation() {
