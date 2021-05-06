@@ -45,15 +45,17 @@ export default function QuestionsScreen(props) {
       ),
     });
 
+    setupCurrentTurnListener();
+    setupCurrentQuestionListener();
+
     if (hostRef.current) {
       setupRegisteredUsersListener();
+      proceedToNextQuestion();
     }
+
     if (!hostRef.current) {
       setupHostQuittingGameListener();
     }
-
-    setupCurrentTurnListener();
-    setupCurrentQuestionListener();
 
     return function cleanUp() {
       removeHostQuittingGameListener();
@@ -75,7 +77,7 @@ export default function QuestionsScreen(props) {
   function proceedToNextQuestion() {
     if (questionsRef.current.length < 1) {
       quitGame();
-      Alert.alert("Spillet er slut", "I er færdige med spillet. Tak for denne gang.");
+      Alert.alert("Spillet er slut", "I er færdige med spillet. Tak for denne gang!");
     }
     else {
       FirebaseService.setCurrentQuestion(codeRef.current, questionsRef.current.pop())
@@ -189,7 +191,7 @@ export default function QuestionsScreen(props) {
           )}
         </View>
 
-        {myTurn &&
+        {hostRef.current &&
         <View style={styles.buttonsView}>
           {hostRef.current && <PinkButton onPress={() => proceedToNextQuestion()} text={questionsRef.current.length < 1 ? "AFSLUT SPIL" : "NÆSTE SPØRGSMÅL"} />}
         </View>
