@@ -201,11 +201,11 @@ export default function QuestionsScreen(props) {
           )}
         </View>
 
-        {hostRef.current &&
+
         <View style={styles.buttonsView}>
           {hostRef.current && <PinkButton onPress={() => proceedToNextQuestion()} text={questionsRef.current.length < 1 ? "AFSLUT SPIL" : "NÆSTE SPØRGSMÅL"} />}
         </View>
-        }
+
       </SafeAreaView>
       {showBoxAnimation &&
         <View style={styles.animationView}>
@@ -221,7 +221,7 @@ export default function QuestionsScreen(props) {
         </View>}
       {showSparkleAnimation &&
         <View style={styles.animationView}>
-          <Text style={styles.animationText}>Nyt spørgsmål... Gør dig klar!</Text>
+        <Text style={styles.animationText}>Gør dig klar til en ny runde!</Text>
           <LottieView
             ref={animation => {
               boxOpeningAnimationRef.current = animation;
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   },
 
   titleView: {
-    flex: 1,
+    flex: 0.6,
     justifyContent: "flex-end",
     alignItems: "center",
   },
@@ -250,7 +250,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: "Roboto_100Thin",
     color: "white",
-
     fontSize: 26,
   },
   svgIconView: {
@@ -273,11 +272,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 15,
     padding: 10,
+    justifyContent: "center",
+    alignItems: "center"
   },
   turnToReadText: {
     fontFamily: "Roboto_100Thin",
     color: "white",
     fontSize: 18,
+    marginBottom: 10
   },
   questionText: {
     fontFamily: "Roboto_100Thin",
@@ -313,8 +315,8 @@ const styles = StyleSheet.create({
 
   animationText: {
     marginBottom: 400,
-    fontFamily: "Roboto_100Thin",
-    color: "black",
-    fontSize: 24,
+    fontFamily: "Roboto_500Medium",
+    color: "#D56C7A",
+    fontSize: 20,
   }
 });

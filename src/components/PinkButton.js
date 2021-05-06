@@ -32,9 +32,8 @@ const styles = StyleSheet.create({
     borderColor: "#FFF",
   },
   buttonText: {
-    fontFamily: "Roboto_100Thin",
+    fontFamily: "Roboto_500Medium",
     color: "#FFF",
-    fontWeight: "bold",
   },
   disabled: {
     opacity: 0.5,

@@ -31,7 +31,7 @@ export default function HomeScreen(props) {
             text="Join et spil"
             onPress={() => props.navigation.navigate("JoinGame")}
           />
-          <PinkButton text="Om denne app" />
+          <PinkButton text="Om denne app" onPress={() => props.navigation.navigate("About")} />
         </View>
       </SafeAreaView>
     </>

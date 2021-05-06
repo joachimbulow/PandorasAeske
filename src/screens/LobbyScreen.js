@@ -170,6 +170,7 @@ export default function LobbyScreen(props) {
               onPress={() => alert(users)}
               text="START SPIL"
               onPress={() => navigateToQuestions()}
+              disabled={users.length <= 1}
             />
           </View>
         )}

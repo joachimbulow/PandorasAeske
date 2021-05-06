@@ -4,7 +4,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useFonts, Roboto_100Thin } from '@expo-google-fonts/roboto';
+import { useFonts, Roboto_100Thin, Roboto_500Medium } from '@expo-google-fonts/roboto';
 import AppLoading from 'expo-app-loading';
 
 //Disable annoying warnings
@@ -18,12 +18,14 @@ import QuestionsScreen from './src/screens/QuestionsScreen.js'
 import GameScreen from './src/screens/GameScreen.js'
 import JoinGameScreen from './src/screens/JoinGameScreen.js'
 import SelectNameScreen from './src/screens/SelectNameScreen.js'
+import AboutScreen from './src/screens/About.js'
 
 
 export default function App() {
 
   let [fontsLoaded] = useFonts({
     Roboto_100Thin,
+    Roboto_500Medium
   });
 
   const Stack = createStackNavigator();
@@ -64,6 +66,9 @@ export default function App() {
           component={SelectNameScreen}
           options={{ title: 'Vælg navn' }}
         />
+        <Stack.Screen
+          name="About"
+          component={AboutScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
