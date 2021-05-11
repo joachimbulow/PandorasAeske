@@ -77,7 +77,6 @@ export default function QuestionsScreen(props) {
   function addQuestion() {
     FirebaseService.addQuestion(question, codeRef.current);
     setQuestion("")
-    Alert.alert("Spørgsmål indsendt", "Dit spørgsmål blev indsendt med success.")
   }
 
   function navigateToGame() {

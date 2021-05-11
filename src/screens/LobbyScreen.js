@@ -52,6 +52,7 @@ export default function LobbyScreen(props) {
       setCode(gameCode);
       codeRef.current = gameCode;
       FirebaseService.generateNewGame(gameCode, props.route.params.name);
+      Alert.alert("Du er nu vært", "Da du er vært er det dig der styrer spillet. Dvs. at du starter spillet og vælger hvornår næste person skal læse op.")
     }
 
     //Not host
